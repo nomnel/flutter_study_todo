@@ -43,44 +43,47 @@ class MyHomePage extends StatelessWidget {
       ),
       body: ListView.builder(
         itemCount: data.length(),
-        itemBuilder: (context, index) {
-          var todo = data.get(index);
-          return ListTile(
-            leading: GestureDetector(
-              child: todo.isDone
-                  ? Icon(Icons.check_box)
-                  : Icon(Icons.check_box_outline_blank),
-              onTap: () {
-                data.toggleStatus(index);
-              },
-            ),
-            title: data.isActive(index)
-                ? TextField(
-                    controller: TextEditingController(text: todo.body),
-                    onEditingComplete: data.inactivate,
-                    onSubmitted: (value) {
-                      data.update(index, value);
-                    },
-                  )
-                : GestureDetector(
-                    child: Text(todo.body),
-                    onTap: () {
-                      data.activate(index);
-                    },
-                  ),
-            trailing: GestureDetector(
-              child: Icon(Icons.delete),
-              onTap: () {
-                data.remove(index);
-              },
-            ),
-          );
-        },
+        itemBuilder: _listItemBuilder,
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: data.add,
-        tooltip: 'Increment',
+        tooltip: 'Add',
         child: Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _listItemBuilder(BuildContext context, int index) {
+    var data = Provider.of<TodoData>(context);
+    var todo = data.get(index);
+    return ListTile(
+      leading: GestureDetector(
+        child: todo.isDone
+            ? Icon(Icons.check_box)
+            : Icon(Icons.check_box_outline_blank),
+        onTap: () {
+          data.toggleStatus(index);
+        },
+      ),
+      title: data.isActive(index)
+          ? TextField(
+              controller: TextEditingController(text: todo.body),
+              onEditingComplete: data.inactivate,
+              onSubmitted: (value) {
+                data.update(index, value);
+              },
+            )
+          : GestureDetector(
+              child: Text(todo.body),
+              onTap: () {
+                data.activate(index);
+              },
+            ),
+      trailing: GestureDetector(
+        child: Icon(Icons.delete),
+        onTap: () {
+          data.remove(index);
+        },
       ),
     );
   }
