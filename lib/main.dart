@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 
-void main() {
+part 'main.g.dart';
+
+Future<void> main() async {
+  await Hive.initFlutter();
+  Hive.registerAdapter(TodoAdapter());
+  await Hive.openBox<Todo>(TodoData.boxName);
   runApp(MyApp());
 }
 
@@ -80,8 +87,17 @@ class MyHomePage extends StatelessWidget {
 }
 
 class TodoData extends ChangeNotifier {
+  static const String boxName = 'todos';
+
   int _activeIndex = -1;
-  List<Todo> _todoList = [];
+  Box<Todo> _box;
+  List<Todo> _todoList;
+
+  TodoData() {
+    _box = Hive.box<Todo>(boxName);
+    _todoList = _box.values.toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  }
 
   void activate(int index) {
     _activeIndex = index;
@@ -89,7 +105,9 @@ class TodoData extends ChangeNotifier {
   }
 
   void add() {
-    _todoList.insert(0, Todo(''));
+    var todo = Todo('');
+    _box.put(todo.id, todo);
+    _todoList.insert(0, todo);
     activate(0);
   }
 
@@ -107,6 +125,8 @@ class TodoData extends ChangeNotifier {
   int length() => _todoList.length;
 
   void remove(int index) {
+    var todo = _todoList[index];
+    _box.delete(todo.id);
     _todoList.removeAt(index);
     inactivate();
   }
@@ -114,22 +134,33 @@ class TodoData extends ChangeNotifier {
   void toggleStatus(int index) {
     var todo = _todoList[index];
     todo.isDone = !todo.isDone;
+    _box.put(todo.id, todo);
     inactivate();
   }
 
   void update(int index, String body) {
-    _todoList[index].body = body;
+    var todo = _todoList[index];
+    todo.body = body;
+    _box.put(todo.id, todo);
     inactivate();
   }
 }
 
+@HiveType(typeId: 1)
 class Todo {
+  @HiveField(0)
+  String id;
+  @HiveField(1)
   String body;
+  @HiveField(2)
   bool isDone;
+  @HiveField(3)
   DateTime createdAt;
 
   Todo(this.body) {
+    var now = DateTime.now();
+    this.id = now.millisecondsSinceEpoch.toString();
     this.isDone = false;
-    this.createdAt = DateTime.now();
+    this.createdAt = now;
   }
 }
