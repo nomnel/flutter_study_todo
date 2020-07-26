@@ -1,4 +1,4 @@
-# flutter_example_todo
+# flutter_study_todo
 
 A new Flutter project.
 
